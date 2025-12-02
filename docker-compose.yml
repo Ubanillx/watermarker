@@ -11,7 +11,7 @@ services:
     environment:
       - WATERMARK_HOST=0.0.0.0
       - WATERMARK_PORT=9996
-      - DOWNLOAD_URL_PREFIX=http://localhost:9996/download
+      - DOWNLOAD_URL_PREFIX=http://121.229.205.96:9996/download
       - MAX_WORKERS=10
       - MAX_FILE_SIZE=52428800  # 50MB
       - FILE_RETENTION_SECONDS=3600
