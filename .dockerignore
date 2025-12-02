@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+.eggs
+dist
+build
+.venv
+venv
+env
+.env
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Output files
+output/*
+temp/*
+!output/.gitkeep
+!temp/.gitkeep
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.docker
+
+# Misc
+*.md
+*.log
+.DS_Store
+Thumbs.db

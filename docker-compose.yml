@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  watermarker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watermarker
+    ports:
+      - "9999:9999"
+    environment:
+      - WATERMARK_HOST=0.0.0.0
+      - WATERMARK_PORT=9999
+      - DOWNLOAD_URL_PREFIX=http://localhost:9999/download
+      - MAX_WORKERS=10
+      - MAX_FILE_SIZE=52428800  # 50MB
+      - FILE_RETENTION_SECONDS=3600
+      # - CUSTOM_FONT_PATH=/usr/share/fonts/custom/myfont.ttf
+    volumes:
+      # 持久化输出文件（可选）
+      - watermark_output:/app/output
+      # 自定义字体目录（可选）
+      # - ./fonts:/usr/share/fonts/custom
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:9999/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  watermark_output:
