@@ -31,11 +31,11 @@ COPY . .
 RUN mkdir -p output temp
 
 # 暴露端口
-EXPOSE 9999
+EXPOSE 9996
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:9999/health')" || exit 1
+    CMD python -c "import httpx; httpx.get('http://localhost:9996/health')" || exit 1
 
 # 启动命令
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9999"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9996"]
