@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Tuple, Optional
 
 import config
+import re
+from urllib.parse import urlparse, unquote
 
 
 def get_file_extension(filename: str) -> str:
@@ -44,6 +46,48 @@ def generate_output_filename(original_filename: str) -> str:
     return f"{base_name}_watermarked_{unique_id}{ext}"
 
 
+def parse_content_disposition(content_disposition: str) -> Optional[str]:
+    """
+    解析Content-Disposition header获取文件名
+    支持 filename*=UTF-8''... 和 filename="..." 格式
+    """
+    if not content_disposition:
+        return None
+    
+    # 优先解析 filename*=UTF-8''encoded_name 格式 (RFC 5987)
+    match = re.search(r"filename\*\s*=\s*([^']+)'[^']*'(.+?)(?:;|$)", content_disposition, re.IGNORECASE)
+    if match:
+        encoding = match.group(1).lower()
+        encoded_name = match.group(2)
+        try:
+            return unquote(encoded_name, encoding=encoding if encoding else 'utf-8')
+        except Exception:
+            pass
+    
+    # 解析 filename="name" 或 filename=name 格式
+    match = re.search(r'filename\s*=\s*["\']?([^"\'\s;]+)["\']?', content_disposition, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    
+    return None
+
+
+def extract_filename_from_url(url: str) -> Optional[str]:
+    """
+    从URL路径中提取文件名
+    """
+    try:
+        parsed = urlparse(url)
+        path = unquote(parsed.path)  # URL解码
+        filename = Path(path).name
+        # 检查是否是有效文件名（有扩展名）
+        if filename and "." in filename and len(filename) > 2:
+            return filename
+    except Exception:
+        pass
+    return None
+
+
 async def download_file(url: str) -> Tuple[bytes, str, str]:
     """
     从URL下载文件
@@ -54,22 +98,31 @@ async def download_file(url: str) -> Tuple[bytes, str, str]:
         response.raise_for_status()
         
         content = response.content
+        filename = None
         
-        # 尝试从URL获取文件名
-        filename = Path(str(url).split("?")[0]).name
+        # 1. 优先从Content-Disposition获取文件名（最可靠）
+        content_disposition = response.headers.get("content-disposition", "")
+        filename = parse_content_disposition(content_disposition)
         
-        # 如果URL没有文件名，尝试从Content-Disposition获取
-        if not filename or "." not in filename:
-            content_disposition = response.headers.get("content-disposition", "")
-            if "filename=" in content_disposition:
-                filename = content_disposition.split("filename=")[-1].strip('"\'')
+        # 2. 尝试从URL路径获取文件名
+        if not filename:
+            filename = extract_filename_from_url(url)
         
-        # 获取扩展名
-        extension = get_file_extension(filename)
-        if not extension:
+        # 3. 根据Content-Type生成文件名
+        if not filename:
             content_type = response.headers.get("content-type", "")
             extension = get_extension_from_content_type(content_type.split(";")[0])
             filename = f"file_{uuid.uuid4().hex[:8]}{extension}"
+        
+        # 获取扩展名
+        extension = get_file_extension(filename)
+        
+        # 如果没有扩展名，尝试从Content-Type补充
+        if not extension:
+            content_type = response.headers.get("content-type", "")
+            extension = get_extension_from_content_type(content_type.split(";")[0])
+            if extension:
+                filename = f"{filename}{extension}"
         
         return content, filename, extension
 
