@@ -2,7 +2,9 @@
 水印服务 - 支持图片、PDF、Word文档
 """
 import io
+import glob
 import math
+import logging
 from pathlib import Path
 from typing import Optional, Tuple
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
@@ -51,18 +53,22 @@ CHINESE_FONT_PATHS = [
 ]
 
 
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 def _find_cjk_fonts() -> list:
     """动态查找系统中的 CJK 字体"""
-    import glob
     patterns = [
-        "/usr/share/fonts/**/Noto*CJK*.ttc",
-        "/usr/share/fonts/**/Noto*CJK*.otf",
-        "/usr/share/fonts/**/wqy*.ttc",
-        "/usr/share/fonts/**/wqy*.ttf",
+        "/usr/share/fonts/**/*.otf",
+        "/usr/share/fonts/**/*.ttf",
+        "/usr/share/fonts/**/*.ttc",
     ]
     found = []
     for pattern in patterns:
         found.extend(glob.glob(pattern, recursive=True))
+    logger.info(f"动态查找到的字体: {found}")
     return found
 
 
@@ -76,17 +82,26 @@ def get_font(size: int) -> ImageFont.FreeTypeFont:
     # 动态查找的字体作为后备
     font_paths.extend(_find_cjk_fonts())
     
+    logger.info(f"尝试加载字体，候选列表: {font_paths}")
+    
     for font_path in font_paths:
-        if Path(font_path).exists():
+        exists = Path(font_path).exists()
+        logger.info(f"检查字体: {font_path}, 存在: {exists}")
+        if exists:
             try:
                 # .ttc文件需要指定字体索引
                 if font_path.lower().endswith('.ttc'):
-                    return ImageFont.truetype(font_path, size, index=0)
-                return ImageFont.truetype(font_path, size)
-            except Exception:
+                    font = ImageFont.truetype(font_path, size, index=0)
+                else:
+                    font = ImageFont.truetype(font_path, size)
+                logger.info(f"成功加载字体: {font_path}")
+                return font
+            except Exception as e:
+                logger.error(f"加载字体失败 {font_path}: {e}")
                 continue
     
     # 降级使用默认字体
+    logger.warning("未找到中文字体，使用默认字体")
     return ImageFont.load_default()
 
 

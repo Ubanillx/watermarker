@@ -365,6 +365,36 @@ async def health_check():
     return {"status": "healthy", "service": "watermark-service"}
 
 
+@app.get("/api/debug/fonts", summary="字体诊断")
+async def debug_fonts():
+    """检查可用字体"""
+    import glob
+    from pathlib import Path
+    from services.watermark_service import CHINESE_FONT_PATHS, _find_cjk_fonts
+    
+    results = {
+        "predefined_fonts": {},
+        "dynamic_fonts": [],
+        "all_fonts_in_system": []
+    }
+    
+    # 检查预定义字体
+    for font_path in CHINESE_FONT_PATHS:
+        results["predefined_fonts"][font_path] = Path(font_path).exists()
+    
+    # 动态查找的字体
+    results["dynamic_fonts"] = _find_cjk_fonts()
+    
+    # 列出 /usr/share/fonts 下所有文件
+    try:
+        all_fonts = glob.glob("/usr/share/fonts/**/*", recursive=True)
+        results["all_fonts_in_system"] = [f for f in all_fonts if Path(f).is_file()]
+    except Exception as e:
+        results["all_fonts_in_system"] = [f"Error: {e}"]
+    
+    return results
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
