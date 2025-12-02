@@ -21,10 +21,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 下载思源黑体（SourceHanSansSC）
+# 下载霞鹜文楷字体（TTF格式，reportlab兼容）
 RUN mkdir -p /usr/share/fonts/chinese \
-    && curl -L -o /usr/share/fonts/chinese/SourceHanSansSC-Regular.otf \
-    "https://gh-proxy.org/https://github.com/adobe-fonts/source-han-sans/raw/release/OTF/SimplifiedChinese/SourceHanSansSC-Regular.otf"
+    && curl -L -o /usr/share/fonts/chinese/LXGWWenKai-Regular.ttf \
+    "https://gh-proxy.org/https://github.com/lxgw/LxgwWenKai/releases/download/v1.500/LXGWWenKai-Regular.ttf"
 
 # 复制依赖文件
 COPY requirements.txt .

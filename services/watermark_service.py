@@ -37,8 +37,8 @@ def hex_to_rgba(hex_color: str, opacity: float) -> Tuple[int, int, int, int]:
 
 # 全局字体路径配置（支持中文）
 CHINESE_FONT_PATHS = [
-    # Docker 容器内置字体（优先）
-    "/usr/share/fonts/chinese/SourceHanSansSC-Regular.otf",  # 思源黑体
+    # Docker 容器内置字体（优先，TTF格式兼容reportlab）
+    "/usr/share/fonts/chinese/LXGWWenKai-Regular.ttf",  # 霞鹜文楷
     # Windows
     "C:/Windows/Fonts/msyh.ttc",      # 微软雅黑
     "C:/Windows/Fonts/msyhbd.ttc",    # 微软雅黑粗体
