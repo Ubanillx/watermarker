@@ -18,8 +18,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
+    fontconfig \
     fonts-noto-cjk \
-    && rm -rf /var/lib/apt/lists/*
+    && fc-cache -fv \
+    && rm -rf /var/lib/apt/lists/* \
+    && find /usr/share/fonts -name "*.ttc" -o -name "*.ttf" | head -20
 
 # 复制依赖文件
 COPY requirements.txt .

@@ -42,10 +42,20 @@ CHINESE_FONT_PATHS = [
     "C:/Windows/Fonts/simsun.ttc",    # 宋体
     "C:/Windows/Fonts/simkai.ttf",    # 楷体
     "C:/Windows/Fonts/STZHONGS.TTF",  # 华文中宋
-    # Linux
-    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",     # 文泉驿微米黑
-    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",       # 文泉驿正黑
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Noto Sans CJK
+    # Linux (Debian/Ubuntu fonts-noto-cjk)
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+    "/usr/share/fonts/opentype/noto/NotoSerifCJKsc-Regular.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSerifCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJKsc-Regular.otf",
+    # 文泉驿
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    # 其他
     "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
     "/usr/share/fonts/truetype/arphic/uming.ttc",
     # macOS
@@ -55,6 +65,21 @@ CHINESE_FONT_PATHS = [
 ]
 
 
+def _find_cjk_fonts() -> list:
+    """动态查找系统中的 CJK 字体"""
+    import glob
+    patterns = [
+        "/usr/share/fonts/**/Noto*CJK*.ttc",
+        "/usr/share/fonts/**/Noto*CJK*.otf",
+        "/usr/share/fonts/**/wqy*.ttc",
+        "/usr/share/fonts/**/wqy*.ttf",
+    ]
+    found = []
+    for pattern in patterns:
+        found.extend(glob.glob(pattern, recursive=True))
+    return found
+
+
 def get_font(size: int) -> ImageFont.FreeTypeFont:
     """获取字体，优先使用系统中文字体"""
     # 优先使用自定义字体路径
@@ -62,6 +87,8 @@ def get_font(size: int) -> ImageFont.FreeTypeFont:
     if app_config.CUSTOM_FONT_PATH and Path(app_config.CUSTOM_FONT_PATH).exists():
         font_paths.append(app_config.CUSTOM_FONT_PATH)
     font_paths.extend(CHINESE_FONT_PATHS)
+    # 动态查找的字体作为后备
+    font_paths.extend(_find_cjk_fonts())
     
     for font_path in font_paths:
         if Path(font_path).exists():
@@ -268,6 +295,7 @@ class PDFWatermarker:
         if app_config.CUSTOM_FONT_PATH and Path(app_config.CUSTOM_FONT_PATH).exists():
             font_paths.append(app_config.CUSTOM_FONT_PATH)
         font_paths.extend(CHINESE_FONT_PATHS)
+        font_paths.extend(_find_cjk_fonts())
         
         for font_path in font_paths:
             if Path(font_path).exists() and not font_registered:

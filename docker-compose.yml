@@ -14,7 +14,7 @@ services:
       - DOWNLOAD_URL_PREFIX=http://121.229.205.96:9996/download
       - MAX_WORKERS=10
       - MAX_FILE_SIZE=52428800  # 50MB
-      - FILE_RETENTION_SECONDS=3600
+      - FILE_RETENTION_SECONDS=86400  # 1天
       # - CUSTOM_FONT_PATH=/usr/share/fonts/custom/myfont.ttf
     volumes:
       # 持久化输出文件（可选）
