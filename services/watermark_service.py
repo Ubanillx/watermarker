@@ -14,9 +14,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from PyPDF2 import PdfReader, PdfWriter
 from docx import Document
-from docx.shared import Pt, RGBColor
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
+from lxml import etree
 
 import config as app_config
 from models import WatermarkConfig, WatermarkPosition
@@ -366,6 +364,13 @@ class PDFWatermarker:
 class WordWatermarker:
     """Word文档水印处理器"""
     
+    # VML 命名空间
+    NSMAP = {
+        'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+        'v': 'urn:schemas-microsoft-com:vml',
+        'o': 'urn:schemas-microsoft-com:office:office',
+    }
+    
     @staticmethod
     def add_watermark(
         docx_data: bytes,
@@ -373,51 +378,60 @@ class WordWatermarker:
         config: WatermarkConfig
     ) -> bytes:
         """为Word文档添加水印"""
-        doc = Document(io.BytesIO(docx_data))
-        
-        # 为每个section添加水印
-        for section in doc.sections:
-            WordWatermarker._add_watermark_to_section(section, text, config)
-        
-        output = io.BytesIO()
-        doc.save(output)
-        return output.getvalue()
+        try:
+            doc = Document(io.BytesIO(docx_data))
+            
+            # 为每个section添加水印
+            for section in doc.sections:
+                WordWatermarker._add_watermark_to_section(section, text, config)
+            
+            output = io.BytesIO()
+            doc.save(output)
+            return output.getvalue()
+        except Exception as e:
+            logger.error(f"Word水印处理失败: {e}")
+            raise
     
     @staticmethod
     def _add_watermark_to_section(section, text: str, config: WatermarkConfig):
         """为section添加水印"""
         # 获取或创建header
         header = section.header
+        header.is_linked_to_previous = False
+        
         if not header.paragraphs:
             header.add_paragraph()
         
         paragraph = header.paragraphs[0]
         
-        # 创建水印形状
-        r, g, b = hex_to_rgb(config.font_color)
+        # 创建带命名空间的VML水印
+        nsmap = WordWatermarker.NSMAP
         
-        # 使用VML创建文字水印
-        pict = OxmlElement('w:pict')
+        # 创建 w:pict 元素
+        pict = etree.Element('{%s}pict' % nsmap['w'])
         
-        shape = OxmlElement('v:shape')
-        shape.set(qn('id'), 'watermark')
-        shape.set('type', '#_x0000_t136')  # 文字水印类型
-        shape.set('style', f'position:absolute;margin-left:0;margin-top:0;width:500pt;height:200pt;rotation:{int(config.angle)};z-index:-251658752')
+        # 创建 v:shape 元素
+        shape = etree.SubElement(pict, '{%s}shape' % nsmap['v'])
+        shape.set('id', 'PowerPlusWaterMarkObject')
+        shape.set('type', '#_x0000_t136')
+        shape.set('style', 
+            f'position:absolute;margin-left:0;margin-top:0;'
+            f'width:500pt;height:200pt;rotation:{int(config.angle)};'
+            f'z-index:-251658752;mso-position-horizontal:center;'
+            f'mso-position-horizontal-relative:margin;'
+            f'mso-position-vertical:center;'
+            f'mso-position-vertical-relative:margin')
         shape.set('fillcolor', config.font_color)
         shape.set('stroked', 'f')
         
-        # 设置填充透明度
-        fill = OxmlElement('v:fill')
-        fill.set('opacity', str(config.opacity))
-        shape.append(fill)
+        # 创建 v:fill 元素
+        fill = etree.SubElement(shape, '{%s}fill' % nsmap['v'])
+        fill.set('opacity', f'{config.opacity}')
         
-        # 文字路径
-        textpath = OxmlElement('v:textpath')
-        textpath.set('style', f'font-family:"Microsoft YaHei";font-size:{config.font_size}pt')
+        # 创建 v:textpath 元素
+        textpath = etree.SubElement(shape, '{%s}textpath' % nsmap['v'])
+        textpath.set('style', f'font-family:"SimSun";font-size:{config.font_size}pt')
         textpath.set('string', text)
-        shape.append(textpath)
-        
-        pict.append(shape)
         
         # 将水印添加到段落
         run = paragraph.add_run()
