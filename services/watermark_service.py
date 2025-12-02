@@ -35,6 +35,8 @@ def hex_to_rgba(hex_color: str, opacity: float) -> Tuple[int, int, int, int]:
 
 # 全局字体路径配置（支持中文）
 CHINESE_FONT_PATHS = [
+    # Docker 容器内置字体（优先）
+    "/usr/share/fonts/chinese/SourceHanSansSC-Regular.otf",  # 思源黑体
     # Windows
     "C:/Windows/Fonts/msyh.ttc",      # 微软雅黑
     "C:/Windows/Fonts/msyhbd.ttc",    # 微软雅黑粗体
@@ -42,22 +44,6 @@ CHINESE_FONT_PATHS = [
     "C:/Windows/Fonts/simsun.ttc",    # 宋体
     "C:/Windows/Fonts/simkai.ttf",    # 楷体
     "C:/Windows/Fonts/STZHONGS.TTF",  # 华文中宋
-    # Linux (Debian/Ubuntu fonts-noto-cjk)
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
-    "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
-    "/usr/share/fonts/opentype/noto/NotoSerifCJKsc-Regular.otf",
-    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/truetype/noto/NotoSerifCJK-Regular.ttc",
-    "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/noto-cjk/NotoSansCJKsc-Regular.otf",
-    # 文泉驿
-    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
-    # 其他
-    "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
-    "/usr/share/fonts/truetype/arphic/uming.ttc",
     # macOS
     "/System/Library/Fonts/PingFang.ttc",           # 苹方
     "/System/Library/Fonts/STHeiti Light.ttc",      # 华文黑体

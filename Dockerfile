@@ -13,16 +13,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # 设置国内镜像源（阿里云）
 RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 
-# 安装系统依赖（用于Pillow和字体支持）
+# 安装系统依赖（用于Pillow）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
-    fontconfig \
-    fonts-noto-cjk \
-    && fc-cache -fv \
-    && rm -rf /var/lib/apt/lists/* \
-    && find /usr/share/fonts -name "*.ttc" -o -name "*.ttf" | head -20
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 下载思源黑体（SourceHanSansSC）
+RUN mkdir -p /usr/share/fonts/chinese \
+    && curl -L -o /usr/share/fonts/chinese/SourceHanSansSC-Regular.otf \
+    "https://gh-proxy.org/https://github.com/adobe-fonts/source-han-sans/raw/release/OTF/SimplifiedChinese/SourceHanSansSC-Regular.otf"
 
 # 复制依赖文件
 COPY requirements.txt .
