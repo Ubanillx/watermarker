@@ -6,10 +6,10 @@ from pathlib import Path
 
 # 服务配置
 HOST = os.getenv("WATERMARK_HOST", "0.0.0.0")
-PORT = int(os.getenv("WATERMARK_PORT", "8000"))
+PORT = int(os.getenv("WATERMARK_PORT", "9996"))
 
 # 下载URL前缀配置
-DOWNLOAD_URL_PREFIX = os.getenv("DOWNLOAD_URL_PREFIX", "http://localhost:8000/download")
+DOWNLOAD_URL_PREFIX = os.getenv("DOWNLOAD_URL_PREFIX", "http://121.229.205.96:9996/download")
 
 # 文件存储配置
 BASE_DIR = Path(__file__).parent
