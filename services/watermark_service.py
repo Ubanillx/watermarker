@@ -139,9 +139,9 @@ class ImageWatermarker:
         text_height = bbox[3] - bbox[1]
         
         if config.position == WatermarkPosition.TILE:
-            # 平铺水印
-            ImageWatermarker._add_tile_watermark(
-                draw, img.size, text, font, color,
+            # 平铺水印 - 直接返回新的水印层
+            watermark_layer = ImageWatermarker._create_tile_watermark(
+                img.size, text, font, color,
                 text_width, text_height, config.spacing, config.angle
             )
         elif config.position == WatermarkPosition.CENTER:
@@ -176,8 +176,7 @@ class ImageWatermarker:
         return output.getvalue()
     
     @staticmethod
-    def _add_tile_watermark(
-        draw: ImageDraw.Draw,
+    def _create_tile_watermark(
         img_size: Tuple[int, int],
         text: str,
         font: ImageFont.FreeTypeFont,
@@ -186,8 +185,8 @@ class ImageWatermarker:
         text_height: int,
         spacing: int,
         angle: float
-    ):
-        """添加平铺水印"""
+    ) -> Image.Image:
+        """创建平铺水印层"""
         # 计算旋转后需要覆盖的区域
         diagonal = math.sqrt(img_size[0]**2 + img_size[1]**2)
         
@@ -214,12 +213,8 @@ class ImageWatermarker:
         right = left + img_size[0]
         bottom = top + img_size[1]
         
-        cropped = temp_layer.crop((left, top, right, bottom))
-        
-        # 将裁剪后的水印绘制到原draw上
-        # 由于我们需要返回给原始draw，这里改用另一种方式
-        # 直接在原始watermark_layer上绘制
-        draw._image.paste(cropped, (0, 0), cropped)
+        # 返回裁剪后的水印层
+        return temp_layer.crop((left, top, right, bottom))
     
     @staticmethod
     def _get_corner_position(
